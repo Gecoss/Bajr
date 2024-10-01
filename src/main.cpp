@@ -2,20 +2,44 @@
 #include <iostream>
 #include <vector>
 #include <algorithm> 
+#include <string>
+using namespace std;
 
 int main() {
     Board board;
     board.print();  // Mostrar el tablero inicial
+    
 
     std::cout << "¡Que comience el juego!" << std::endl;
 
     while (!board.endGame()) {
         int direction;
+        string entry;
         int pieceNumber;
+        int verification = 0;
+    
+        while (verification == 0){
+
         std::cout << "Turno del jugador " << (board.getActiveTurn() == B ? "B" : "N")
                 << ". Ingresa el número de ficha: ";
-        std::cin >> pieceNumber;
+        std::cin >> entry;
 
+        try{
+        pieceNumber = stoi(entry);
+        verification = 1;
+        }catch(invalid_argument){
+        verification = 0;
+        }
+        if (pieceNumber <= 3 && pieceNumber && pieceNumber >= 1){
+
+            verification = 1;
+        
+        }else{
+            verification = 0;
+            std::cout << "hola";
+        }
+
+        }
         board.selectPiece(pieceNumber);  // Seleccionar la ficha según el número
 
         // Obtener los movimientos legales alrededor de la ficha seleccionada
