@@ -21,14 +21,14 @@ class Board
 
 
     public:
-    
+        static const int EMPTY = -1;
         void selectPiece(int position);  // Método para seleccionar una ficha
         std::vector<int> getLegalMovesAround() const;  // Método para obtener movimientos legales alrededor de la ficha seleccionada
         Board();  // Constructor prototype
         Board(uint64_t x, uint64_t o, MARK turn);
         ~Board();  // Destructor prototype
 
-        int evaluate(int depth);  // Función de evaluación
+        int evaluate();  // Función de evaluación
         std::vector<int> generateAllLegalMoves() const;
         std::vector<int> getAdjacentPositions(int position) const;
         std::string getDirectionString(int position) const;

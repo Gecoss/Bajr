@@ -18,6 +18,98 @@ uint64_t Board::getBBoard() const { return board[B]; }
 uint64_t Board::getNBoard() const { return board[N]; }
 MARK Board::getActiveTurn() const { return turn; }
 
+int calculateManhattanDistance(int pos1, int pos2) {
+    int row1 = pos1 / 6;
+    int col1 = pos1 % 6;
+    int row2 = pos2 / 6;
+    int col2 = pos2 % 6;
+    return std::abs(row1 - row2) + std::abs(col1 - col2);
+}
+
+int Board::evaluate() {
+    int scoreB = 0;  // Puntuación para el jugador B
+    int scoreN = 0;  // Puntuación para el jugador N
+
+    // Objetivos de los jugadores
+    std::vector<int> targetPositionsB = { 4, 5, 11 };  // Esquinas objetivo para B
+    std::vector<int> targetPositionsN = { 42, 46, 47 };     // Esquinas objetivo para N
+
+    // Recorremos las piezas del jugador B
+    for (int i = 0; i < 36; ++i) {
+        if (board[B] & (oneMask << i)) {
+            int closestTarget = 36;  // Inicializamos con un valor grande
+            for (int target : targetPositionsB) {
+                int distance = calculateManhattanDistance(i, target);
+                closestTarget = std::min(closestTarget, distance);  // Guardamos la distancia más cercana
+            }
+            scoreB += (10 - closestTarget);  // Aumentamos la puntuación de B mientras más cerca esté
+        }
+    }
+
+    // Recorremos las piezas del jugador N
+    for (int i = 0; i < 36; ++i) {
+        if (board[N] & (oneMask << i)) {
+            int closestTarget = 36;  // Inicializamos con un valor grande
+            for (int target : targetPositionsN) {
+                int distance = calculateManhattanDistance(i, target);
+                closestTarget = std::min(closestTarget, distance);  // Guardamos la distancia más cercana
+            }
+            scoreN += (10 - closestTarget);  // Aumentamos la puntuación de N mientras más cerca esté
+        }
+    }
+
+    // Penalizamos a un jugador si el otro tiene piezas más cercanas a su objetivo
+    for (int target : targetPositionsB) {
+        int distanceB = 36, distanceN = 36;
+
+        // Buscar la pieza más cercana de B a su objetivo
+        for (int i = 0; i < 36; ++i) {
+            if (board[B] & (oneMask << i)) {
+                distanceB = std::min(distanceB, calculateManhattanDistance(i, target));
+            }
+        }
+
+        // Buscar la pieza más cercana de N a este objetivo de B
+        for (int i = 0; i < 36; ++i) {
+            if (board[N] & (oneMask << i)) {
+                distanceN = std::min(distanceN, calculateManhattanDistance(i, target));
+            }
+        }
+
+        // Penalizar si N está más cerca del objetivo de B
+        if (distanceN < distanceB) {
+            scoreB -= 4;  // Penalización para B
+        }
+    }
+
+    for (int target : targetPositionsN) {
+        int distanceB = 36, distanceN = 36;
+
+        // Buscar la pieza más cercana de N a su objetivo
+        for (int i = 0; i < 36; ++i) {
+            if (board[N] & (oneMask << i)) {
+                distanceN = std::min(distanceN, calculateManhattanDistance(i, target));
+            }
+        }
+
+        // Buscar la pieza más cercana de B a este objetivo de N
+        for (int i = 0; i < 36; ++i) {
+            if (board[B] & (oneMask << i)) {
+                distanceB = std::min(distanceB, calculateManhattanDistance(i, target));
+            }
+        }
+
+        // Penalizar si B está más cerca del objetivo de N
+        if (distanceB < distanceN) {
+            scoreN -= 4;  // Penalización para N
+        }
+    }
+
+    // La función de evaluación devolverá la diferencia de puntuación entre los jugadores
+    return scoreB - scoreN;
+}
+
+
 void Board::selectPiece(int pieceNumber) {
     uint64_t activeBoard = (turn == B) ? board[B] : board[N];  // Tablero del jugador activo
     int bitPosition = -1;
@@ -72,30 +164,27 @@ std::vector<int> Board::getLegalMovesAround() const {
     std::vector<int> legalMoves;
     if (selectedPiece == -1) return legalMoves;  // Si no hay ficha seleccionada, retorna vacío
 
-    int directionMultiplier = (turn == B) ? 1 : -1;  // Multiplicador de dirección para jugadores
+    // Obtener la fila y columna actuales de la pieza seleccionada
+    int row = selectedPiece / 6;
+    int col = selectedPiece % 6;
 
-    // Direcciones permitidas para cada jugador:
-    const std::vector<std::pair<int, int>> directionsB = {
-        {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}  // Arriba izquierda, arriba, arriba derecha, derecha, abajo derecha
-    };
-    const std::vector<std::pair<int, int>> directionsN = {
-        {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}  // Abajo derecha, abajo, abajo izquierda, izquierda, arriba izquierda
-    };
+    // Multiplicador de dirección para determinar las direcciones de movimiento válidas
+    const std::vector<std::pair<int, int>> directions = (turn == B) ?
+        std::vector<std::pair<int, int>>{{-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}} :
+        std::vector<std::pair<int, int>>{{1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
 
-    const auto& directions = (turn == B) ? directionsB : directionsN;
-
-    // Añadir posiciones alrededor de la ficha seleccionada en las direcciones permitidas
+    // Recorrer las direcciones permitidas y calcular posiciones nuevas
     for (const auto& [dr, dc] : directions) {
-        int row = selectedPiece / 6;
-        int col = selectedPiece % 6;
-
         int newRow = row + dr;
         int newCol = col + dc;
 
-        if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 6) {  // Verificar si está dentro del tablero
+        // Verificar si la nueva posición está dentro de los límites del tablero
+        if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 6) {
             int newPos = newRow * 6 + newCol;
+
+            // Si es un movimiento legal, lo añadimos a la lista
             if (isLegalMove(newPos)) {
-                legalMoves.push_back(newPos);  // Agregar posición legal
+                legalMoves.push_back(newPos);
             }
         }
     }
@@ -134,8 +223,7 @@ bool Board::isLegalMove(const int position) const
     return true;
 }
 
-bool Board::makeMove(const int position)
-{
+bool Board::makeMove(const int position) {
     if (isLegalMove(position)) {
         // Obtener el número de fichas del jugador actual
         int pieceCount = countPieces(turn);
@@ -163,10 +251,18 @@ bool Board::makeMove(const int position)
 
         // Si el jugador tiene 3 fichas, debe mover una existente
         if (pieceCount >= 3 && selectedPiece != -1) {
+            // Guardar la posición anterior de la pieza
+            int prevPosition = selectedPiece; 
             board[turn] &= ~(oneMask << selectedPiece);  // Remover la ficha seleccionada
+
+            // Colocar la ficha en la nueva posición
+            board[turn] |= (oneMask << position);
+
+            // Aquí podrías agregar la lógica para permitir deshacer si es necesario
+            // undoMove(prevPosition);  // Si necesitas revertir algo aquí
         }
 
-        // Colocar la ficha en la nueva posición
+        // Colocar la nueva ficha en la posición
         board[turn] |= (oneMask << position);
 
         // Alternar el turno
