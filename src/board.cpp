@@ -35,21 +35,21 @@ int Board::evaluate() {
     std::vector<int> targetPositionsN = { 24, 30, 31 };     // Esquinas objetivo para N
 
     // Recorremos las piezas del jugador B
-    for (int i = 0; i < 35; ++i) {
+    for (int i = 0; i < 36; ++i) {
         if (board[B] & (oneMask << i)) {
-            int closestTarget = 35;  // Inicializamos con un valor grande
+            int closestTarget = 36;  // Inicializamos con un valor grande
             for (int target : targetPositionsB) {
                 int distance = calculateManhattanDistance(i, target);
                 closestTarget = std::min(closestTarget, distance);  // Guardamos la distancia más cercana
             }
-            scoreB += (10 - closestTarget);  // Aumentamos la puntuación de B mientras más cerca esté
+            scoreB += (10 - closestTarget); // Aumentamos la puntuación de B mientras más cerca esté
         }
     }
 
     // Recorremos las piezas del jugador N
-    for (int i = 0; i < 35; ++i) {
+    for (int i = 0; i < 36; ++i) {
         if (board[N] & (oneMask << i)) {
-            int closestTarget = 35;  // Inicializamos con un valor grande
+            int closestTarget = 36;  // Inicializamos con un valor grande
             for (int target : targetPositionsN) {
                 int distance = calculateManhattanDistance(i, target);
                 closestTarget = std::min(closestTarget, distance);  // Guardamos la distancia más cercana
@@ -60,17 +60,17 @@ int Board::evaluate() {
 
     // Penalizamos a un jugador si el otro tiene piezas más cercanas a su objetivo
     for (int target : targetPositionsB) {
-        int distanceB = 35, distanceN = 35;
+        int distanceB = 36, distanceN = 36;
 
         // Buscar la pieza más cercana de B a su objetivo
-        for (int i = 0; i < 35; ++i) {
+        for (int i = 0; i < 36; ++i) {
             if (board[B] & (oneMask << i)) {
                 distanceB = std::min(distanceB, calculateManhattanDistance(i, target));
             }
         }
 
         // Buscar la pieza más cercana de N a este objetivo de B
-        for (int i = 0; i < 35; ++i) {
+        for (int i = 0; i < 36; ++i) {
             if (board[N] & (oneMask << i)) {
                 distanceN = std::min(distanceN, calculateManhattanDistance(i, target));
             }
@@ -83,17 +83,17 @@ int Board::evaluate() {
     }
 
     for (int target : targetPositionsN) {
-        int distanceB = 35, distanceN = 35;
+        int distanceB = 36, distanceN = 36;
 
         // Buscar la pieza más cercana de N a su objetivo
-        for (int i = 0; i < 35; ++i) {
+        for (int i = 0; i < 36; ++i) {
             if (board[N] & (oneMask << i)) {
                 distanceN = std::min(distanceN, calculateManhattanDistance(i, target));
             }
         }
 
         // Buscar la pieza más cercana de B a este objetivo de N
-        for (int i = 0; i < 35; ++i) {
+        for (int i = 0; i < 36; ++i) {
             if (board[B] & (oneMask << i)) {
                 distanceB = std::min(distanceB, calculateManhattanDistance(i, target));
             }
@@ -116,7 +116,7 @@ void Board::selectPiece(int pieceNumber) {
     int count = 0;
     
     // Encontrar la posición de la pieza correspondiente (1, 2 o 3)
-    for (int i = 0; i < 35; i++) {
+    for (int i = 0; i < 36; i++) {
         if (activeBoard & (oneMask << i)) {
             count++;
             if (count == pieceNumber) {
@@ -215,8 +215,8 @@ std::vector<int> Board::getAdjacentPositions(int position) const {
 }
 
 bool Board::isLegalMove(const int position) const
-{
-    if (position < 0 || position > 35)  // posición dentro del rango?
+{//Se modificó el rango para que la fila inferior sea ilegal por que la ia se quedaba atascada en la esquina inferior derecha y no podía ganar
+    if (position < 0 || position > 31)  // rango de movimiento 
         return false;
     if ((board[B] | board[N]) & (oneMask << position))  // posición vacía?
         return false;
