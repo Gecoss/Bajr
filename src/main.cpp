@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm> 
 #include <string>
-#include <limits>  // Para infinity
+#include <limits>  
 using namespace std;
 
 int nodes_visited = 0;  // Contador de nodos visitados
@@ -87,16 +87,15 @@ void makeBestMoveForN(Board& board, int B, int N, int depth) {
             board = previousState;
 
             // Si encontramos una mejor evaluación, actualizamos el mejor movimiento
-            if (eval > bestEval) {
+           if (eval > bestEval) {
                 bestEval = eval;
                 bestMove = move;
             }
+            // Si encontramos un mejor movimiento, lo realizamos
+            if (bestMove != -1) {
+             board.makeMove(bestMove);
+            }
         }
-    }
-
-    // Si encontramos un mejor movimiento, lo realizamos
-    if (bestMove != -1) {
-        board.makeMove(bestMove);
     }
 }
 
