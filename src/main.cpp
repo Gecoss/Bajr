@@ -81,7 +81,7 @@ void makeBestMoveForN(Board& board, int B, int N, int depth) {
             board.makeMove(move);
 
             // Evaluamos el tablero usando negamax
-            int eval = -negamax(board, N, B, depth - 1, -std::numeric_limits<int>::infinity(), std::numeric_limits<int>::infinity());
+            int eval = -negamax(board, B, N, depth - 1, -std::numeric_limits<int>::infinity(), std::numeric_limits<int>::infinity());
 
             // Restauramos el estado anterior
             board = previousState;
@@ -104,7 +104,7 @@ void makeBestMoveForN(Board& board, int B, int N, int depth) {
 int main() {
     Board board;
     board.print();  // Mostrar el tablero inicial
-
+    int contador = 0;
     std::cout << "¡Que comience el juego!" << std::endl;
 
     while (!board.endGame()) {
@@ -157,6 +157,9 @@ int main() {
             if (direction < 1 || direction > legalMoves.size()) {
                 std::cout << "Dirección inválida. Intenta de nuevo." << std::endl;
                 continue;
+            }else{
+                contador ++;
+                std::cout<<"Numero de movimientos de B: " << contador << "\n";
             }
 
             int selectedPosition = legalMoves[direction - 1];
