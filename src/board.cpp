@@ -308,5 +308,3 @@ void Board::print() const
     }
     std::cout << std::endl;
 }
-
-
